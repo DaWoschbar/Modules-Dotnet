@@ -1,0 +1,167 @@
+﻿{
+	"Name": "winlib",
+	"Description": "Windows Library for Dotnet",
+	"Authors": [
+		"The Faction Team"
+	],
+	"Commands": [
+		{
+			"Name": "ping",
+			"Description": "Pings a computer or list of computers",
+			"Help": "Uses the .NET API to ping a computer (or list of computers). You must include a computername or IP address to ping.",
+			"OpsecSafe": "True",
+			"Parameters": [
+				{
+					"Name": "ComputerName",
+					"Required": "True",
+					"Position": 0,
+					"Help": "The computer to ping. You can specify a list of computers as a comma seperated string (/ComputerName:\"one,two,three\""
+				},
+				{
+					"Name": "Timeout",
+					"Required": "False",
+					"Help": "Milliseconds to wait before assuming the host is down. Default is 250"
+				},
+				{
+					"Name": "Threads",
+					"Required": "False",
+					"Help": "How many threads to use while pinging. Default is 25"
+				}
+			]
+		},
+		{
+			"Name": "portscan",
+			"Description": "Scan port(s) on computer(s)",
+			"Help": "You can specify a list of computers or ports as a command seperated string (/ComputerName:\"one,two,three\")",
+			"OpsecSafe": "True",
+			"Parameters": [
+				{
+					"Name": "ComputerName",
+					"Required": "True",
+					"Position": 0,
+					"Help": "The computer to scan. You can specify a list of computers as a comma seperated string (/ComputerName:\"one,two,three\""
+				},
+				{
+					"Name": "Port",
+					"Required": "True",
+					"Position": 1,
+					"Help": "Ports to scan. You can specify a single port or a list of ports using a comma seperated string (/Port:\"80,443,8080\""
+				},
+				{
+					"Name": "Ping",
+					"Required": "False",
+					"Values": ["true", "false"],
+					"Help": "Ping the computer before scanning. Default is true"
+				},
+				{
+					"Name": "Timeout",
+					"Required": "False",
+					"Help": "Milliseconds to wait before assuming the host is down. Default is 250"
+				},
+				{
+					"Name": "Threads",
+					"Required": "False",
+					"Help": "How many threads to use while pinging. Default is 25"
+				}
+			]
+		},
+		{
+			"Name": "powershell",
+			"Description": "Execute a PowerShell command through .NET. Doesn't launch powershell.exe and by default will attempt to bypass AMSI and ScriptBlock logging",
+			"Help": "You must specify a command to run. Make sure to encase your command in quotes.",
+			"OpsecSafe": "False",
+			"MitreReference": "T1086",
+			"Parameters": [
+				{
+					"Name": "Command",
+					"Required": "True",
+					"Position": 0,
+					"Help": "PowerShell command to execute"
+				},
+				{
+					"Name": "BypassAmsi",
+					"Required": "False",
+					"Values": ["true", "false"],
+					"Help": "Bypass AMSI by seting amsiInitFailed to true (this is also known as the Matt Graeber special). Default is true"
+				},
+				{
+					"Name": "BypassLogging",
+					"Required": "False",
+					"Values": ["true", "false"],
+					"Help": "Bypass Logging by seting the PowerShell ETW logger to null. Default is true"
+				},
+				{
+					"Name": "OutString",
+					"Required": "False",
+					"Values": ["true", "false"],
+					"Help": "Appends 'Out-String' to the end of the PowerShell command. You probably don't want to change this. Default is true"
+				}
+			]
+		},
+		{
+			"Name": "reg",
+			"Description": "Work with the registry",
+			"Help": "You must specify and operation and a registry key for this command. Registry keys must begin with HKLM or HKCU exactly (not HKEY_CURRENT_USER)",
+			"OpsecSafe": "False",
+			"Parameters": [
+				{
+					"Name": "Operation",
+					"Required": "True",
+					"Position": 0,
+					"Values": ["read", "write", "delete"], 
+					"Help": "You must specify the Value parameter if you're using write"
+				},
+				{
+					"Name": "Path",
+					"Required": "True",
+					"Position": 1,
+					"Help": "The Path for the key you're working with. Must begin with either HKLM or HKCU"
+				},
+				{
+					"Name": "Value",
+					"Required": "False",
+					"Help": "The value to write. This parameter is required if you're using write."
+				}
+			]
+		},
+		{
+			"Name": "services",
+			"Description": "List Services on local or remote computers",
+			"Help": "This command returns a list of services running on the specified computer",
+			"OpsecSafe": "False",
+			"Parameters": [
+				{
+					"Name": "ComputerName",
+					"Required": "false",
+					"Position": 0,
+					"Help": "Computer to get services on. Default is localhost"
+				}
+			]
+		},
+		{
+			"Name": "wmi",
+			"Description": "Execute a WMI query",
+			"Help": "This command executes the given WMI query against the specified computer",
+			"OpsecSafe": "False",
+			"Parameters": [
+				{
+					"Name": "Query",
+					"Required": "True",
+					"Position": 0,
+					"Help": "WMI query to execute"
+				},
+				{
+					"Name": "Namespace",
+					"Required": "False",
+					"Help": "The namespace to execute the WMI query in. Default is 'root\\cimv2'"
+				},
+				{
+					"Name": "ComputerName",
+					"Required": "False",
+					"Help": "Computer to run the WMI query against. Default is localhost."
+				}
+			]
+		}
+	],
+	"BuildLocation": "./Builds/Debug/winlib.dll"
+}

@@ -1,0 +1,195 @@
+﻿{
+	"Name": "stdlib",
+	"Description": "Standard Library for Dotnet",
+	"Authors": [
+		"The Faction Team"
+	],
+	"Commands": [
+		{
+			"Name": "assembly",
+			"Description": "Loads and executes a .NET assembly",
+			"Help": "Assemblies must first be uploaded through the Faction console.\n\n## Parameters:\n* AssemblyPath (Required): Path for the assmembly. Example: `f2:files/sharpattack.exe`\n* TypeName: The type to load.\n* MethodName: The method to launch once the Assembly is loaded. Default is `Main`\n* AssemblyParameters: Comma seperated list of parameters to send to the assembly",
+			"OpsecSafe": "True",
+			"Parameters": [
+				{
+					"Name": "AssemblyPath",
+					"Required": "True",
+					"Position": 0,
+					"Help": "Assembly to execute"
+				},
+				{
+					"Name": "MethodName",
+					"Required": "False",
+					"Help": "Method to execute"
+				},
+				{
+					"Name": "TypeName",
+					"Required": "False",
+					"Help": "Type to load"
+				},
+				{
+					"Name": "AssemblyParameters",
+					"Required": "False",
+					"Help": "Comma seperated list of parameters to pass to the assembly"
+				}				
+			]
+		},
+		{
+			"Name": "cd",
+			"Description": "Change the directory you're operating out of",
+			"Help": "You must include a path by either listing it after the command (`cd C:\\Foo`) or with the path parameter (`cd /path:C:\\Foo`)",
+			"OpsecSafe": "True",
+			"Parameters": [
+				{
+					"Name": "Path",
+					"Required": "True",
+					"Position": 0,
+					"Help": "The path to change to"
+				}
+			]
+		},
+		{
+			"Name": "download",
+			"Description": "Downloads a file from Faction to the Agent",
+			"Help": "You must first upload a file to Faction before it can be downloaded to the agent. Note that 'File' *MUST* be in the format 'f2:file/<filename>'",
+			"OpsecSafe": "False",
+			"Parameters": [
+				{
+					"Name": "File",
+					"Required": "True",
+					"Position": 0,
+					"Help": "File to download to the Agent. The file must be uploaded to Faction already. Format for this parameter is 'f2:file/<filename>'"
+				},
+				{
+					"Name": "Path",
+					"Required": "True",
+					"Position": 1,
+					"Help": "Path to write the file to, including filename. Example: C:\\malware.exe"
+				}
+			],
+			"Artifacts": [
+				"Creates a file on the file system"
+			]
+		},
+		{
+			"Name": "ls",
+			"Description": "List the contents of a directory or path",
+			"Help": "You can include a path by either listing it after the command (ls C:\\Foo) or with the path parameter (ls /path:C:\\Foo)",
+			"OpsecSafe": "True",
+			"Parameters": [
+				{
+					"Name": "Path",
+					"Required": "False",
+					"Position": 0,
+					"Help": "The path to list"
+				}
+			]
+		},
+		{
+			"Name": "mkdir",
+			"Description": "Create a directory",
+			"Help": "Creates a directory of the specified path",
+			"OpsecSafe": "True",
+			"Parameters": [
+				{
+					"Name": "Path",
+					"Required": "True",
+					"Position": 0,
+					"Help": "The path to delete"
+				}
+			],
+			"Artifacts": [
+				"Creates a directory on the file system"
+			]
+		},
+		{
+			"Name": "ps",
+			"Description": "List processes",
+			"Help": "List processes that are running on the computer. You can use the following parameters:\n\n* ProcessName: Returns processes that match this string\n* Arch: Returns processes that match either x86 or x86\n* Username: Return processes that are running under a user matching this string",
+			"OpsecSafe": "True",
+			"Parameters": [
+				{
+					"Name": "ProcessName",
+					"Required": "False",
+					"Position": 0,
+					"Help": "Return processes with a name matching this string. Example: `ps /ProcessName:explore`"
+				},
+				{
+					"Name": "Arch",
+					"Required": "False",
+					"Help": "Return processes matching x86 or x64. Example: `ps /Arch:x86`",
+					"Values": ["x86", "x64"]
+				},
+				{
+					"Name": "Username",
+					"Required": "False",
+					"Help": "Return processes matching this username: Example `ps /Username:jeff`"
+				}
+			]
+		},
+		{
+			"Name": "pwd",
+			"Description": "Returns the directory that the agent is currently in",
+			"Help": "Returns the directory that the agent is currently in",
+			"OpsecSafe": "True",
+			"Parameters": []
+		},		
+		{
+			"Name": "rm",
+			"Description": "Remove a directory or file",
+			"Help": "Deletes a file or directory from disk. If a directory is specified, everything in the directory will be deleted.",
+			"OpsecSafe": "True",
+			"Parameters": [
+				{
+					"Name": "Path",
+					"Required": "True",
+					"Position": 0,
+					"Help": "The path to delete"
+				}
+			],
+			"Artifacts": [
+				"Removes a file or directory from the file system"
+			]
+		},
+		{
+			"Name": "shell",
+			"Description": "Execute a shell command",
+			"Help": "You must include a command by either listing it after (shell whoami) or with the command parameter (shell /command:whoami)",
+			"OpsecSafe": "True",
+			"MitreReference": "T1106",
+			"Parameters": [
+				{
+					"Name": "Command",
+					"Required": "True",
+					"Position": 0,
+					"Help": "Command to execute"
+				}
+			],
+			"Artifacts": [
+				"Can be logged if process auditing is in place"
+			]
+		},
+		{
+			"Name": "upload",
+			"Description": "Upload a file from an agent to Faction",
+			"Help": "Converts the specified file (using the Path parameter) to a base64 encoded string and sends it back to faction where it is converted back and written to disk. Note: There is a 300mb limit on files that can be uploaded to Faction.",
+			"OpsecSafe": "True",
+			"Parameters": [
+				{
+					"Name": "Path",
+					"Required": "True",
+					"Position": 0,
+					"Help": "Path to the file to upload to Faction."
+				}
+			]
+		},
+		{
+			"Name": "whoami",
+			"Description": "Returns the context that the agent is running under",
+			"Help": "Returns the context that the agent is running under",
+			"OpsecSafe": "True",
+			"Parameters": []
+		}
+	],
+	"BuildLocation": "./Builds/Debug/stdlib.dll"
+}
