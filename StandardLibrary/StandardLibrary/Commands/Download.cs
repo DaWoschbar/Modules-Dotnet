@@ -20,14 +20,22 @@ namespace Faction.Modules.Dotnet.Commands
       File.WriteAllBytes(path, bytes);
 
       FileStream fop = File.OpenRead(path);
-      string chksum = BitConverter.ToString(System.Security.Cryptography.SHA1.Create().ComputeHash(fop));
+      fop.Position = 0;
+      byte[] hash = System.Security.Cryptography.SHA1.Create().ComputeHash(fop);
+      string hashString = "";
+
+      for (int i = 0; i < hash.Length; i++)
+      {
+            hashString += String.Format("{0:X2}", hash[i]);
+      }
+
 #if DEBUG
-      Console.WriteLine($"[Download Command] File downloaded. Hash: {chksum}");
+      Console.WriteLine($"[Download Command] File downloaded. Hash: {hashString}");
 #endif
       output.Complete = true;
       output.Success = true;
       output.Message = $"File written to {path}";
-      output.IOCs.Add(new IOC("file", path, "create", $"Downloaded file to {path}", chksum));
+      output.IOCs.Add(new IOC("file", path, "create", $"Downloaded file to {path}", hashString));
       return output;
     }
   }

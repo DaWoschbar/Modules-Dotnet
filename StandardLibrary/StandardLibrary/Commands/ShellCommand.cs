@@ -30,6 +30,10 @@ namespace Faction.Modules.Dotnet.Commands
         {
           username = Parameters["Username"];
         }
+        else
+        {
+          username = WindowsIdentity.GetCurrent().Name;
+        }
 
         if (Parameters.ContainsKey("Domain"))
         {

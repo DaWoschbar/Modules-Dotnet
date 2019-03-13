@@ -96,6 +96,10 @@
 					"Values": ["true", "false"],
 					"Help": "Appends 'Out-String' to the end of the PowerShell command. You probably don't want to change this. Default is true"
 				}
+			],
+			"Artifacts": [
+				"Can be logged through ScriptBlock logging if 'BypassLogging' is set to false (default is true)",
+				"Can be detected by antivirus if AMSI if 'BypassAmsi' is set to false (default is true)"
 			]
 		},
 		{
