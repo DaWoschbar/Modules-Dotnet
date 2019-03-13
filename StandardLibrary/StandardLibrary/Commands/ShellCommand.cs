@@ -30,10 +30,6 @@ namespace Faction.Modules.Dotnet.Commands
         {
           username = Parameters["Username"];
         }
-        else
-        {
-          username = WindowsIdentity.GetCurrent().Name;
-        }
 
         if (Parameters.ContainsKey("Domain"))
         {
@@ -49,6 +45,12 @@ namespace Faction.Modules.Dotnet.Commands
         output.Complete = true;
         output.Success = true;
         output.Message = $"{result[1]}";
+
+        if (String.IsNullOrEmpty(username))
+        {
+          username = WindowsIdentity.GetCurrent().Name;
+        }
+
         output.IOCs.Add(new IOC("process", result[0], "create", $"Process started: \"{cmd}\" under username \"{username}\""));
 
       }
