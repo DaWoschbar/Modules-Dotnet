@@ -38,7 +38,7 @@ namespace Faction.Modules.Dotnet.Commands
         output.Message = Shell.PowerShellExecute(command, outString, bypassLogging, bypassAmsi);
         output.Complete = true;
         output.Success = true;
-        IOC ioc = new IOC("other", "PowerShell", "executed", $"PowerShell command executed: {command}");
+        IOC ioc = new IOC("Process", "PowerShell Command", "Create", $"PowerShell command executed: {command}");
         output.IOCs.Add(ioc);
       }
       catch (Exception e)
