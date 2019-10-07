@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="PingTests.cs" />
     <Compile Include="PortScanTests.cs" />
+    <Compile Include="PowerShellTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
