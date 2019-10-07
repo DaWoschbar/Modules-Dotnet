@@ -47,10 +47,13 @@ namespace WinLibTests
             Assert.IsTrue(results.Complete);
             Assert.IsTrue(results.Success);
             Console.WriteLine(results.Message.ToString());
-            // Message should equal = "[{"ComputerName":"localhost","IsUp":true}]"
-            Assert.IsTrue(results.Message.Contains("c2"));
-            // We only check IsUp as ping may be disabled for localhost in some situations
-            Assert.IsTrue(results.Message.Contains("IsUp"));
+            // Message should contain results for the 4 hosts we pinged.
+            Assert.IsTrue(results.Message.Contains("c2.lol"));
+            Assert.IsTrue(results.Message.Contains("bing.com"));
+            Assert.IsTrue(results.Message.Contains("google.com"));
+            Assert.IsTrue(results.Message.Contains("microsoft.com"));
+
+            //Debugging line, remove before PR due to error with this I suspect
             Console.WriteLine(results.Message.ToString());
 
         }
@@ -58,30 +61,28 @@ namespace WinLibTests
         [TestMethod]
         public void PingTimeOutTest()
         {
-            Parameters.Add("ComputerName", "localhost");
+            Parameters.Add("ComputerName", "c2.lol");
+            Parameters.Add("Timeout", "60");
             List<Command> commands = Faction.Modules.Dotnet.Initialize.GetCommands();
             Faction.Modules.Dotnet.Common.Command pingCommand = commands[0];
             CommandOutput results = pingCommand.Execute(Parameters);
             Assert.IsTrue(results.Complete);
             Assert.IsTrue(results.Success);
-            // Message should equal = "[{"ComputerName":"localhost","IsUp":true}]"
-            Assert.IsTrue(results.Message.Contains("localhost"));
-            // We only check IsUp as ping may be disabled for localhost in some situations
+            Assert.IsTrue(results.Message.Contains("c2.lol"));
             Assert.IsTrue(results.Message.Contains("IsUp"));
         }
 
         [TestMethod]
         public void PingThreadsTest()
         {
-            Parameters.Add("ComputerName", "localhost");
+            Parameters.Add("ComputerName", "c2.lol, bing.com, google.com, www.microsoft.com");
+            Parameters.Add("Threads", "3");
             List<Command> commands = Faction.Modules.Dotnet.Initialize.GetCommands();
             Faction.Modules.Dotnet.Common.Command pingCommand = commands[0];
             CommandOutput results = pingCommand.Execute(Parameters);
             Assert.IsTrue(results.Complete);
             Assert.IsTrue(results.Success);
-            // Message should equal = "[{"ComputerName":"localhost","IsUp":true}]"
-            Assert.IsTrue(results.Message.Contains("localhost"));
-            // We only check IsUp as ping may be disabled for localhost in some situations
+            Assert.IsTrue(results.Message.Contains("c2.lol"));
             Assert.IsTrue(results.Message.Contains("IsUp"));
         }
     }
