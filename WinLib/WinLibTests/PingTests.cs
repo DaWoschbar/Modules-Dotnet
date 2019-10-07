@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Faction.Modules.Dotnet.Common;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-using Faction.Modules.Dotnet.Common;
-using Faction.Modules.Dotnet.Commands;
+using System;
+using System.Collections.Generic;
 
 namespace WinLibTests
 {
