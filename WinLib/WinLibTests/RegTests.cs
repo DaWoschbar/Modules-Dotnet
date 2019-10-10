@@ -47,15 +47,19 @@ namespace WinLibTests
             Assert.IsTrue(results.Message.Contains("WINDOWS")); //inf SHOULD always be in Windows, consider a better directory in the future
         }
 
+
+        // This method intentionally fails at the moment due to deletion not properly parsing the written value
+        // The failure is evidence of a bug
         [TestMethod]
-        public void RegistryWriteAndDelete()
+        public void RegistryWrite()
         {
-            CommandOutput results = KeyOperations("write", "HKEY_CURRENT_USER\\Environment\\TestValue", "TestWrite");
-            Assert.IsTrue(results.Complete);
-            Assert.IsTrue(results.Success);
-            results = KeyOperations("delete", "HKCU\\Environment\\TestValue", String.Empty);
-            Assert.IsTrue(results.Complete);
-            Assert.IsTrue(results.Success);
+            CommandOutput writeresults = KeyOperations("write", "HKEY_CURRENT_USER\\Environment\\TestValue", "TestWrite");
+            Assert.IsTrue(writeresults.Complete);
+            Assert.IsTrue(writeresults.Success);
+
+            CommandOutput deleteresults = KeyOperations("delete", "HKCU\\Environment\\TestValue", String.Empty);
+            Assert.IsTrue(deleteresults.Complete);
+            Assert.IsTrue(deleteresults.Success);
         }
     }
 }

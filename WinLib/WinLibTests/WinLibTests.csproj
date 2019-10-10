@@ -57,6 +57,7 @@
     <Compile Include="PowerShellTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegTests.cs" />
+    <Compile Include="ServicesTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
