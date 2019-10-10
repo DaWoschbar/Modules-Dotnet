@@ -10,6 +10,15 @@ namespace WinLibTests
     public class ServicesTests
     {
         [TestMethod]
+        public void ServiceInitialization()
+        {
+            List<Command> commands = Faction.Modules.Dotnet.Initialize.GetCommands();
+            Faction.Modules.Dotnet.Common.Command servicesCommand = commands[4];
+            Assert.AreEqual("services", servicesCommand.Name);
+        }
+
+
+        [TestMethod]
         public void ServicesGet()
         {
             Dictionary<string, string> Parameters = new Dictionary<string, string>();

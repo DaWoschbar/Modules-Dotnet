@@ -30,6 +30,15 @@ namespace WinLibTests
 
 
         [TestMethod]
+        public void RegistryInitialization()
+        {
+            List<Command> commands = Faction.Modules.Dotnet.Initialize.GetCommands();
+            Faction.Modules.Dotnet.Common.Command regCommand = commands[3];
+            Assert.AreEqual("services", regCommand.Name);
+        }
+
+
+        [TestMethod]
         public void RegistryRead()
         {
             Dictionary<string, string> Parameters = new Dictionary<string, string>();
