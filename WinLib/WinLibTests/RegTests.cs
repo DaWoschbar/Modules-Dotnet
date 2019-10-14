@@ -12,7 +12,7 @@ namespace WinLibTests
         /// <summary>
         /// Scaffolding Method for RegistryWrite and RegistryDelete Tests
         /// </summary>
-        private CommandOutput KeyOperations(string operation, string path, string value)
+        private CommandOutput KeyOperations(string operation, string path, string value, string type)
         {
             Dictionary<string, string> Parameters = new Dictionary<string, string>();
             List<Command> commands = Faction.Modules.Dotnet.Initialize.GetCommands();
@@ -22,6 +22,11 @@ namespace WinLibTests
             if (value!=String.Empty)
             {
                 Parameters.Add("Value", "TestWrite");
+            }
+
+            if (type!=String.Empty)
+            {
+                Parameters.Add("Type", type);
             }
 
             CommandOutput results = regCommand.Execute(Parameters);
@@ -62,11 +67,12 @@ namespace WinLibTests
         [TestMethod]
         public void RegistryWrite()
         {
-            CommandOutput writeresults = KeyOperations("write", "HKEY_CURRENT_USER\\Environment\\TestValue", "TestWrite");
+            CommandOutput writeresults = KeyOperations("write", "HKEY_CURRENT_USER\\Environment\\TestValue", "TestWrite", String.Empty);
             Assert.IsTrue(writeresults.Complete);
             Assert.IsTrue(writeresults.Success);
 
-            CommandOutput deleteresults = KeyOperations("delete", "HKCU\\Environment\\TestValue", String.Empty);
+            CommandOutput deleteresults = KeyOperations("delete", "HKCU\\Environment\\TestValue", String.Empty, "DeleteSubKey");
+            Console.WriteLine(deleteresults.Message);
             Assert.IsTrue(deleteresults.Complete);
             Assert.IsTrue(deleteresults.Success);
         }
