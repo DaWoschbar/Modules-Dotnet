@@ -34,23 +34,19 @@ namespace Faction.Modules.Dotnet.Commands
             return true;
         }
 
-        public static bool RegistryDelete(string valuePath, RegistryKey registryKey, string type)
+        public static bool RegistryDelete(string value, RegistryKey registryKey, string type)
         {
             switch (type)
             {
-                case "DeleteValue":
-                    registryKey.DeleteValue(valuePath);
+                case "Value":
+                    registryKey.DeleteValue(value);
                     break;
-                case "DeleteSubKey":
-                    registryKey.DeleteSubKey(valuePath);
-                    break;
-                case "DeleteTree":
-                    registryKey.DeleteSubKeyTree(valuePath);
+                case "SubKey":
+                    registryKey.DeleteSubKey(value);
                     break;
                 default:
                     break;
             }
-
             return true;
         }
 
@@ -65,7 +61,7 @@ namespace Faction.Modules.Dotnet.Commands
                 string operation = Parameters["Operation"].ToLower();
                 string regPath = Parameters["Path"];
                 string value = "";
-                string type = "DeleteValue";
+                string type = "";
 
                 if (Parameters.ContainsKey("Value"))
                 {
@@ -97,18 +93,33 @@ namespace Faction.Modules.Dotnet.Commands
                 }
                 else if (operation == "delete")
                 {
-                    if (Parameters.ContainsKey("Type"))
+                    // make sure they have selected the type of delete to do
+                    if (Parameters.ContainsKey("Type") && Parameters.ContainsKey("Path"))
                     {
                         type = Parameters["Type"];
+                        regPath = Parameters["Path"];
                     }
+                    else
+                    {
+                        output.Success = false;
+                        output.Message = "Missing parameters for registry deletion: type and path";
+                        return output;
+                    }
+
+
+
                     RegistryKey registryKey = null;
+                    // This properly gets a reference to the registry key for key or value deletion
                     if (regPath.StartsWith("HKLM"))
                     {
-                        registryKey = Registry.LocalMachine;
+                        string valuePath = regPath.Remove(0, 5);
+                        registryKey = Registry.LocalMachine.OpenSubKey(valuePath, true);
                     }
                     else if (regPath.StartsWith("HKCU"))
                     {
-                        registryKey = Registry.CurrentUser;
+                        string valuePath = regPath.Remove(0, 5);
+                        registryKey = Registry.CurrentUser.OpenSubKey(valuePath, true);
+                    }
                     else
                     {
                         output.Success = false;
@@ -118,10 +129,10 @@ namespace Faction.Modules.Dotnet.Commands
                     if (registryKey != null)
                     {
                         string valuePath = regPath.Remove(0, 5);
-                        if (RegistryDelete(valuePath, registryKey, type))
+                        if (RegistryDelete(value, registryKey, type))
                         {
                             output.Success = true;
-                            output.Message = $"Deleted registry value at {regPath}";
+                            output.Message = $"Deleted registry {type} at {regPath}";
 
                             //IOC regDeleteIOC = new IOC("registry", regPath, "delete", output.Message);
                             //output.IOCs.Add(regDeleteIOC);
