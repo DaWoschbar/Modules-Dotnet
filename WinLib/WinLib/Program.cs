@@ -19,6 +19,7 @@ namespace Faction.Modules.Dotnet
       commands.Add(new Reg());
       commands.Add(new Services());
       commands.Add(new Wmi());
+      commands.Add(new Driver());
       return commands;
     }
   }

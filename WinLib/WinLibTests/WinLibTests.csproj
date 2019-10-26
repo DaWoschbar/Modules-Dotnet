@@ -52,6 +52,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DriverTests.cs" />
     <Compile Include="PingTests.cs" />
     <Compile Include="PortScanTests.cs" />
     <Compile Include="PowerShellTests.cs" />
