@@ -29,5 +29,20 @@ namespace WinLibTests
             Console.WriteLine(results.Message);
             Assert.AreEqual("driver", driverCommand.Name);
         }
+
+        [TestMethod]
+        public void DriverInstall()
+        {
+            Dictionary<string, string> Parameters = new Dictionary<string, string>();
+            List<Command> commands = Faction.Modules.Dotnet.Initialize.GetCommands();
+            Faction.Modules.Dotnet.Common.Command driverCommand = commands[6];
+            Parameters.Add("Operation", "Install");
+            Parameters.Add("DriverPath", "D:\\temp\\kprocesshacker.sys");
+            Parameters.Add("ServiceName", "ProcessHacker");
+            Parameters.Add("DisplayName", "ProcessHacker");
+            CommandOutput results = driverCommand.Execute(Parameters);
+            Console.WriteLine(results.Message);
+            Assert.AreEqual("driver", driverCommand.Name);
+        }
     }
 }

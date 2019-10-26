@@ -16,7 +16,9 @@ namespace Faction.Modules.Dotnet.Commands
 {
     class Driver : Command
     {
-        //pinvoke signatures required
+        [System.Runtime.InteropServices.DllImport("Kernel32")]
+        private extern static Boolean CloseHandle(IntPtr handle);
+
         [DllImport("psapi.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern bool EnumDeviceDrivers(
             [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.U4)] [In][Out] UInt32[] ddAddresses, 
@@ -30,6 +32,9 @@ namespace Faction.Modules.Dotnet.Commands
             StringBuilder ddBaseName,
             int baseNameStringSizeChars
         );
+
+        [DllImport("advapi32.dll", EntryPoint = "OpenSCManagerW", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern IntPtr OpenSCManager(string machineName, string databaseName, uint dwAccess);
 
         // http://pinvoke.net/default.aspx/advapi32/CreateService.html
         [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
@@ -55,7 +60,7 @@ namespace Faction.Modules.Dotnet.Commands
         /// </summary>
         /// <param name="driverPath"></param>
         /// <returns></returns>
-        protected void CopyDriverToRightLocationWin64(string driverPath)
+        protected string CopyDriverToRightLocationWin64(string driverPath)
         {
             string driverFileName;
             string driverWin64Path = "C:\\Windows\\System32\\drivers";
@@ -66,6 +71,8 @@ namespace Faction.Modules.Dotnet.Commands
                 driverWin64Path += driverFileName;
                 System.IO.File.Copy(driverPath, driverWin64Path, true);
             }
+
+            return driverWin64Path;
         }
 
         /// <summary>
@@ -160,8 +167,10 @@ namespace Faction.Modules.Dotnet.Commands
             try
             {
                 string operation = "Enumerate"; //set a default to Enumerate
-                string driverPath = "";
-                string method = "";
+                string driverPath = string.Empty;
+                string method = string.Empty;
+                string serviceName = string.Empty;
+                string displayName = string.Empty;
                 operation = Parameters["Operation"];
                 switch(operation)
                 {
@@ -171,8 +180,63 @@ namespace Faction.Modules.Dotnet.Commands
                         break;
                     case "Install":
                         driverPath = Parameters["DriverPath"];
+                        serviceName = Parameters["ServiceName"];
+                        displayName = Parameters["DisplayName"];
+
+                        // parameter validation
+                        if(driverPath == string.Empty)
+                        {
+                            throw new ArgumentException("DriverPath is empty.");
+                        }
+                        if (serviceName == string.Empty)
+                        {
+                            throw new ArgumentException("ServiceName is empty.");
+                        }
+                        if (displayName == string.Empty)
+                        {
+                            throw new ArgumentException("DisplayName is empty.");
+                        }
+
                         DriverPathValidation(driverPath);
-                        CopyDriverToRightLocationWin64(driverPath);
+                        driverPath = CopyDriverToRightLocationWin64(driverPath);
+                        try
+                        {
+
+
+                            IntPtr SC_MANAGER = OpenSCManager(null, null, 0xF003F);
+                            // https://docs.microsoft.com/en-us/windows/win32/api/winsvc/nf-winsvc-createservicea
+                            IntPtr SC_SERVICE = CreateService(
+                                SC_MANAGER,
+                                serviceName,
+                                displayName,
+                                0xF003F, // Service All Access Permission
+                                0x00000001, // Kernel Driver
+                                0x00000000, // Boot Start
+                                0x00000000, // Error Control - don't log the error
+                                driverPath,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null
+                                );
+
+                            // Cleanup the pointers
+                            if (!CloseHandle(SC_SERVICE))
+                            {
+                                throw new ArgumentException("Unable to close service handle.");
+                            }
+                            if (!CloseHandle(SC_MANAGER))
+                            {
+                                throw new ArgumentException("Unable to close service controller manager handle.");
+                            }
+                        }
+                        catch (ArgumentException e)
+                        {
+                            output.Complete = true;
+                            output.Success = false;
+                            output.Message = e.Message;
+                        }
                         break;
                     case "Call":
                         driverPath = Parameters["DriverPath"];
