@@ -43,6 +43,8 @@ namespace WinLibTests
             CommandOutput results = driverCommand.Execute(Parameters);
             Console.WriteLine(results.Message);
             Assert.AreEqual("driver", driverCommand.Name);
+            Assert.IsTrue(results.Complete);
+            Assert.IsTrue(results.Success);
         }
     }
 }

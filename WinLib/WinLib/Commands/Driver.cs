@@ -16,8 +16,9 @@ namespace Faction.Modules.Dotnet.Commands
 {
     class Driver : Command
     {
-        [System.Runtime.InteropServices.DllImport("Kernel32")]
-        private extern static Boolean CloseHandle(IntPtr handle);
+        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool CloseServiceHandle(IntPtr hSCObject);
 
         [DllImport("psapi.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern bool EnumDeviceDrivers(
@@ -34,11 +35,11 @@ namespace Faction.Modules.Dotnet.Commands
         );
 
         [DllImport("advapi32.dll", EntryPoint = "OpenSCManagerW", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern IntPtr OpenSCManager(string machineName, string databaseName, uint dwAccess);
+        private static extern IntPtr OpenSCManager(string machineName, string databaseName, uint dwAccess);
 
         // http://pinvoke.net/default.aspx/advapi32/CreateService.html
         [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern IntPtr CreateService(
+        private static extern IntPtr CreateService(
             IntPtr hSCManager,
             string lpServiceName,
             string lpDisplayName,
@@ -53,27 +54,13 @@ namespace Faction.Modules.Dotnet.Commands
             string lpServiceStartName,
             string lpPassword);
 
-        /// <summary>
-        /// Copies the driver to the proper system location if needed
-        /// This does a file system check rather than enumeration check in case the driver
-        /// is in a different location or we want to load a different version from elsewhere
-        /// </summary>
-        /// <param name="driverPath"></param>
-        /// <returns></returns>
-        protected string CopyDriverToRightLocationWin64(string driverPath)
-        {
-            string driverFileName;
-            string driverWin64Path = "C:\\Windows\\System32\\drivers";
+        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool StartService(
+            IntPtr hService,
+            int dwNumServiceArgs,
+            string[] lpServiceArgVectors);
 
-            if (!driverPath.Contains(driverWin64Path))
-            {
-                driverFileName = System.IO.Path.GetFileName(driverPath);
-                driverWin64Path += driverFileName;
-                System.IO.File.Copy(driverPath, driverWin64Path, true);
-            }
-
-            return driverWin64Path;
-        }
 
         /// <summary>
         /// Enumerates the installed drivers; this is done via the Win32 method as it returns the actual sys files instead of just the service names.
@@ -129,7 +116,7 @@ namespace Faction.Modules.Dotnet.Commands
 
         private void DriverPathValidation(string driverPath)
         {
-            if (!Directory.Exists(driverPath) || File.Exists(driverPath))
+            if (!File.Exists(driverPath))
             {
                 throw new ArgumentException("Invalid driver path for DriverPath parameter.");
             }
@@ -142,11 +129,11 @@ namespace Faction.Modules.Dotnet.Commands
             // Reference information:
             // https://docs.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-enumdevicedrivers
             // https://docs.microsoft.com/en-us/windows/win32/psapi/device-driver-information
-            // https://www.codeproject.com/Articles/293900/How-to-install-driver-dynamically-or-install-drive
             // https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea?redirectedfrom=MSDN
             // https://docs.microsoft.com/en-us/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol?redirectedfrom=MSDN
 
             CommandOutput output = new CommandOutput();
+            output.Success = true; // Pre-emptively set as true, set as false in all exceptions
             bool isElevated;
             List<string> deviceDrivers = new List<string>();
 
@@ -170,7 +157,6 @@ namespace Faction.Modules.Dotnet.Commands
                 string driverPath = string.Empty;
                 string method = string.Empty;
                 string serviceName = string.Empty;
-                string displayName = string.Empty;
                 operation = Parameters["Operation"];
                 switch(operation)
                 {
@@ -181,8 +167,7 @@ namespace Faction.Modules.Dotnet.Commands
                     case "Install":
                         driverPath = Parameters["DriverPath"];
                         serviceName = Parameters["ServiceName"];
-                        displayName = Parameters["DisplayName"];
-
+                        output.Message = "";
                         // parameter validation
                         if(driverPath == string.Empty)
                         {
@@ -192,26 +177,21 @@ namespace Faction.Modules.Dotnet.Commands
                         {
                             throw new ArgumentException("ServiceName is empty.");
                         }
-                        if (displayName == string.Empty)
-                        {
-                            throw new ArgumentException("DisplayName is empty.");
-                        }
 
                         DriverPathValidation(driverPath);
-                        driverPath = CopyDriverToRightLocationWin64(driverPath);
+                        IntPtr SC_MANAGER = IntPtr.Zero;
+                        IntPtr SC_SERVICE = IntPtr.Zero;
                         try
                         {
-
-
-                            IntPtr SC_MANAGER = OpenSCManager(null, null, 0xF003F);
+                            SC_MANAGER = OpenSCManager(null, null, 0xF003F);
                             // https://docs.microsoft.com/en-us/windows/win32/api/winsvc/nf-winsvc-createservicea
-                            IntPtr SC_SERVICE = CreateService(
+                            SC_SERVICE = CreateService(
                                 SC_MANAGER,
                                 serviceName,
-                                displayName,
+                                serviceName,
                                 0xF003F, // Service All Access Permission
                                 0x00000001, // Kernel Driver
-                                0x00000000, // Boot Start
+                                0x00000003, // Service Demand Start
                                 0x00000000, // Error Control - don't log the error
                                 driverPath,
                                 null,
@@ -221,47 +201,54 @@ namespace Faction.Modules.Dotnet.Commands
                                 null
                                 );
 
-                            // Cleanup the pointers
-                            if (!CloseHandle(SC_SERVICE))
+                            // Next we should set the security for the kernel driver; this is intentionally not done as we do not know all the requirements
+                            // This potentially adds a risk if the driver is left present for an extended period of time.
+
+                            // Start the installed service (our driver)
+                            bool result = StartService(SC_SERVICE, 0, null);
+
+                            if (!result)
                             {
-                                throw new ArgumentException("Unable to close service handle.");
-                            }
-                            if (!CloseHandle(SC_MANAGER))
-                            {
-                                throw new ArgumentException("Unable to close service controller manager handle.");
+                                output.Message = "Service failed to start.";
+                                output.Success = false;
                             }
                         }
                         catch (ArgumentException e)
                         {
-                            output.Complete = true;
-                            output.Success = false;
                             output.Message = e.Message;
+                            output.Success = false;
+                        }
+                        finally
+                        {
+                            if(SC_SERVICE!=IntPtr.Zero)
+                            {
+                                CloseServiceHandle(SC_SERVICE);
+                            }
+                            if(SC_MANAGER!=IntPtr.Zero)
+                            {
+                                CloseServiceHandle(SC_MANAGER);
+                            }
                         }
                         break;
                     case "Call":
                         driverPath = Parameters["DriverPath"];
                         method = Parameters["Method"];
                         DriverPathValidation(driverPath);
-                        CopyDriverToRightLocationWin64(driverPath);
                         break;
                     case "Unload":
-                        driverPath = Parameters["DriverPath"];
-                        DriverPathValidation(driverPath);
+                        driverPath = Parameters["DriverName"];
                         break;
                     default:
                         break;
                 }
-
-                //string results = LoadAndCallDriver(driverPath, operation);
-                output.Success = true;
-                output.Complete = true;
             }
             catch (Exception e)
             {
-                output.Complete = true;
-                output.Success = false;
                 output.Message = e.Message;
+                output.Success = false;
             }
+
+            output.Complete = true;
             return output;
         }
 
