@@ -70,14 +70,14 @@ namespace Faction.Modules.Dotnet.Commands
 
         [DllImport("psapi.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern bool EnumDeviceDrivers(
-            [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.U4)] [In][Out] UInt32[] ddAddresses, 
+            [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.FunctionPtr)] [In][Out] UIntPtr[] ddAddresses,
             UInt32 arraySizeBytes,
             [MarshalAs(UnmanagedType.U4)] out UInt32 bytesNeeded
-        );
+            );
 
         [DllImport("psapi.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern int GetDeviceDriverFileName(
-            UInt32 ddAddress,
+            UIntPtr ddAddress,
             StringBuilder ddBaseName,
             int baseNameStringSizeChars
         );
@@ -147,7 +147,7 @@ namespace Faction.Modules.Dotnet.Commands
             bool success;
             UInt32 driverArraySize;
             UInt32 driverArraySizeBytes;
-            UInt32[] ddAddresses;
+            UIntPtr[] ddAddresses;
             UInt32 driverArrayBytesNeeded;
 
             // Enumerate the installed drivers to see if this is already present
@@ -167,7 +167,7 @@ namespace Faction.Modules.Dotnet.Commands
 
             driverArraySize = driverArrayBytesNeeded / 4;
             driverArraySizeBytes = driverArrayBytesNeeded;
-            ddAddresses = new UInt32[driverArraySize];
+            ddAddresses = new UIntPtr[driverArraySize];
             success = EnumDeviceDrivers(ddAddresses, driverArraySizeBytes, out driverArrayBytesNeeded);
 
             if(!success)
@@ -237,6 +237,7 @@ namespace Faction.Modules.Dotnet.Commands
                     case "Enumerate":
                         EnumerateDeviceDrivers(deviceDrivers);
                         output.Message = JsonConvert.SerializeObject(deviceDrivers);
+                        output.Success = true;
                         break;
                     case "InstallAndStart":
                         driverPath = Parameters["DriverPath"];
