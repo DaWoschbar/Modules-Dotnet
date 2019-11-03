@@ -215,6 +215,118 @@ namespace Faction.Modules.Dotnet.Commands
             SERVICE_DISABLED = 0x00000004,
         }
 
+        public enum EFileAccess : uint
+        {
+
+            AccessSystemSecurity = 0x1000000,
+            MaximumAllowed = 0x2000000,
+
+            Delete = 0x10000,
+            ReadControl = 0x20000,
+            WriteDAC = 0x40000,
+            WriteOwner = 0x80000,
+            Synchronize = 0x100000,
+
+            StandardRightsRequired = 0xF0000,
+            StandardRightsRead = ReadControl,
+            StandardRightsWrite = ReadControl,
+            StandardRightsExecute = ReadControl,
+            StandardRightsAll = 0x1F0000,
+            SpecificRightsAll = 0xFFFF,
+
+            FILE_READ_DATA = 0x0001,
+            FILE_LIST_DIRECTORY = 0x0001,
+            FILE_WRITE_DATA = 0x0002,
+            FILE_ADD_FILE = 0x0002,
+            FILE_APPEND_DATA = 0x0004,
+            FILE_ADD_SUBDIRECTORY = 0x0004,
+            FILE_CREATE_PIPE_INSTANCE = 0x0004,
+            FILE_READ_EA = 0x0008,
+            FILE_WRITE_EA = 0x0010,
+            FILE_EXECUTE = 0x0020,
+            FILE_TRAVERSE = 0x0020,
+            FILE_DELETE_CHILD = 0x0040,
+            FILE_READ_ATTRIBUTES = 0x0080,
+            FILE_WRITE_ATTRIBUTES = 0x0100,
+
+            GenericRead = 0x80000000,
+            GenericWrite = 0x40000000,
+            GenericExecute = 0x20000000,
+            GenericAll = 0x10000000,
+
+            SPECIFIC_RIGHTS_ALL = 0x00FFFF,
+            FILE_ALL_ACCESS =
+            StandardRightsRequired |
+            Synchronize |
+            0x1FF,
+
+            FILE_GENERIC_READ =
+            StandardRightsRead |
+            FILE_READ_DATA |
+            FILE_READ_ATTRIBUTES |
+            FILE_READ_EA |
+            Synchronize,
+
+            FILE_GENERIC_WRITE =
+            StandardRightsWrite |
+            FILE_WRITE_DATA |
+            FILE_WRITE_ATTRIBUTES |
+            FILE_WRITE_EA |
+            FILE_APPEND_DATA |
+            Synchronize,
+
+            FILE_GENERIC_EXECUTE =
+            StandardRightsExecute |
+              FILE_READ_ATTRIBUTES |
+              FILE_EXECUTE |
+              Synchronize
+        }
+
+        public enum EFileShare : uint
+        {
+            None = 0x00000000,
+            Read = 0x00000001,
+            Write = 0x00000002,
+            Delete = 0x00000004
+        }
+
+        public enum ECreationDisposition : uint
+        {
+            New = 1,
+            CreateAlways = 2,
+            OpenExisting = 3,
+            OpenAlways = 4,
+            TruncateExisting = 5
+        }
+
+        public enum EFileAttributes : uint
+        {
+            Readonly = 0x00000001,
+            Hidden = 0x00000002,
+            System = 0x00000004,
+            Directory = 0x00000010,
+            Archive = 0x00000020,
+            Device = 0x00000040,
+            Normal = 0x00000080,
+            Temporary = 0x00000100,
+            SparseFile = 0x00000200,
+            ReparsePoint = 0x00000400,
+            Compressed = 0x00000800,
+            Offline = 0x00001000,
+            NotContentIndexed = 0x00002000,
+            Encrypted = 0x00004000,
+            Write_Through = 0x80000000,
+            Overlapped = 0x40000000,
+            NoBuffering = 0x20000000,
+            RandomAccess = 0x10000000,
+            SequentialScan = 0x08000000,
+            DeleteOnClose = 0x04000000,
+            BackupSemantics = 0x02000000,
+            PosixSemantics = 0x01000000,
+            OpenReparsePoint = 0x00200000,
+            OpenNoRecall = 0x00100000,
+            FirstPipeInstance = 0x00080000
+        }
 
         [DllImport("psapi.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern bool EnumDeviceDrivers(
@@ -236,7 +348,6 @@ namespace Faction.Modules.Dotnet.Commands
             string databaseName,
             uint dwAccess);
 
-        // http://pinvoke.net/default.aspx/advapi32/CreateService.html
         [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern IntPtr CreateService(
             IntPtr hSCManager,
@@ -282,6 +393,27 @@ namespace Faction.Modules.Dotnet.Commands
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool CloseServiceHandle(
             IntPtr hSCObject);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr CreateFile(
+            [MarshalAs(UnmanagedType.LPWStr)] string filename,
+            [MarshalAs(UnmanagedType.U4)] FileAccess access,
+            [MarshalAs(UnmanagedType.U4)] FileShare share,
+            IntPtr securityAttributes, // optional SECURITY_ATTRIBUTES struct or IntPtr.Zero
+            [MarshalAs(UnmanagedType.U4)] FileMode creationDisposition,
+            [MarshalAs(UnmanagedType.U4)] FileAttributes flagsAndAttributes,
+            IntPtr templateFile); //ignored on file open
+
+        [DllImport("Kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern bool DeviceIoControl(
+        IntPtr hDevice,
+        uint dwIoControlCode,
+        ref long InBuffer,
+        int nInBufferSize,
+        ref long OutBuffer,
+        int nOutBufferSize,
+        ref int pBytesReturned,
+        [In] ref NativeOverlapped lpOverlapped);
 
         private void EnumerateDeviceDrivers(List<string> deviceDrivers)
         {
@@ -336,10 +468,10 @@ namespace Faction.Modules.Dotnet.Commands
                     SC_MANAGER,
                     serviceName,
                     serviceName,
-                    (uint)SERVICE_ACCESS.SERVICE_ALL_ACCESS, // Service All Access Permission
-                    (uint)SERVICE_TYPE.SERVICE_KERNEL_DRIVER, // Kernel Driver
-                    (uint)SERVICE_START.SERVICE_DEMAND_START, // Service Demand Start
-                    (uint)SERVICE_ERROR.SERVICE_ERROR_NORMAL, // Error Control - don't log the error TODO - fix
+                    (uint)SERVICE_ACCESS.SERVICE_ALL_ACCESS,
+                    (uint)SERVICE_TYPE.SERVICE_KERNEL_DRIVER,
+                    (uint)SERVICE_START.SERVICE_DEMAND_START,
+                    (uint)SERVICE_ERROR.SERVICE_ERROR_IGNORE,
                     driverPath,
                     null,
                     null,
@@ -382,8 +514,8 @@ namespace Faction.Modules.Dotnet.Commands
             try
             {
                 SC_MANAGER = OpenSCManager(null, null, (uint)SCM_ACCESS.SC_MANAGER_ALL_ACCESS);
-                SC_SERVICE = OpenService(SC_MANAGER, serviceName, (uint) SERVICE_ACCESS.SERVICE_STOP | (uint) SERVICE_ACCESS.DELETE | (uint)SERVICE_ACCESS.SERVICE_STOP);
-                if(SC_SERVICE == IntPtr.Zero)
+                SC_SERVICE = OpenService(SC_MANAGER, serviceName, (uint)SERVICE_ACCESS.SERVICE_STOP | (uint)SERVICE_ACCESS.DELETE | (uint)SERVICE_ACCESS.SERVICE_STOP);
+                if (SC_SERVICE == IntPtr.Zero)
                 {
                     throw new Exception("Unable to get a handle on service.");
                 }
@@ -411,6 +543,36 @@ namespace Faction.Modules.Dotnet.Commands
             }
 
             return true;
+        }
+
+        private bool CallDriverMethod(string driverPath, uint controlCode, long deviceBuffer, ref long responseBuffer)
+        {
+            bool status = false;
+            int dummy = 0;
+            NativeOverlapped foo = new NativeOverlapped();
+            GCHandle gch = GCHandle.Alloc(foo);
+            IntPtr fileHandle = CreateFile(
+                driverPath,
+                FileAccess.ReadWrite,
+                FileShare.None,
+                IntPtr.Zero,
+                FileMode.Open,
+                FileAttributes.Normal,
+                IntPtr.Zero
+                );
+
+            status = DeviceIoControl(
+                fileHandle,
+                controlCode,
+                ref deviceBuffer,
+                Marshal.SizeOf(deviceBuffer),
+                ref responseBuffer,
+                Marshal.SizeOf(responseBuffer),
+                ref dummy,
+                ref foo);
+
+            gch.Free();
+            return status;
         }
 
         private void DriverPathValidation(string driverPath)
@@ -445,9 +607,10 @@ namespace Faction.Modules.Dotnet.Commands
 
             try
             {
-                string operation = "Enumerate"; //set a default to Enumerate
+                string operation = "Enumerate";
                 string driverPath = string.Empty;
-                string method = string.Empty;
+                string controlCode = string.Empty;
+                string buffer = string.Empty;
                 string serviceName = string.Empty;
                 operation = Parameters["Operation"];
 
@@ -475,14 +638,37 @@ namespace Faction.Modules.Dotnet.Commands
                         break;
                     case "Call":
                         driverPath = Parameters["DriverPath"];
-                        method = Parameters["Method"];
+                        controlCode = Parameters["ControlCode"];
+                        buffer = Parameters["Buffer"];
+                        long responseBuffer = 0;
+                        if (driverPath == string.Empty)
+                        {
+                            throw new ArgumentException("DriverPath is empty.");
+                        }
+                        if (controlCode == string.Empty)
+                        {
+                            throw new ArgumentException("ControlCode is empty.");
+                        }
+                        if (buffer == string.Empty)
+                        {
+                            throw new ArgumentException("Buffer is empty.");
+                        }
+                        long inputBuffer = Convert.ToInt64(buffer);
                         DriverPathValidation(driverPath);
+                        output.Success = CallDriverMethod(driverPath, Convert.ToUInt32(controlCode), inputBuffer, ref responseBuffer);
+                        output.Message = JsonConvert.SerializeObject(responseBuffer);
                         break;
                     case "Unload":
                         serviceName = Parameters["ServiceName"];
+                        if (serviceName == string.Empty)
+                        {
+                            throw new ArgumentException("ServiceName is empty.");
+                        }
                         output.Success = StopAndUnloadDriver(serviceName);
                         break;
                     default:
+                        output.Message = "No viable option selected";
+                        output.Success = false;
                         break;
                 }
             }
@@ -494,45 +680,5 @@ namespace Faction.Modules.Dotnet.Commands
             output.Complete = true;
             return output;
         }
-
-        /// <summary>
-        /// Pinvoke Signatures Below, needed to call CreateFileA to load the driver
-        /// Needed to then call deviceIOControl to interact with it
-        /// https://www.pinvoke.net/default.aspx/kernel32/CreateFile.html
-        /// </summary>
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern IntPtr CreateFile(
-             [MarshalAs(UnmanagedType.LPTStr)] string filename,
-             [MarshalAs(UnmanagedType.U4)] FileAccess access,
-             [MarshalAs(UnmanagedType.U4)] FileShare share,
-             IntPtr securityAttributes, // optional SECURITY_ATTRIBUTES struct or IntPtr.Zero
-             [MarshalAs(UnmanagedType.U4)] FileMode creationDisposition,
-             [MarshalAs(UnmanagedType.U4)] FileAttributes flagsAndAttributes,
-             IntPtr templateFile); //ignored on file open
-
-        /// <summary>
-        /// https://www.pinvoke.net/default.aspx/kernel32/DeviceIoControl.html
-        /// </summary>
-        /// <param name="hDevice"></param>
-        /// <param name="dwIoControlCode"></param>
-        /// <param name="InBuffer"></param>
-        /// <param name="nInBufferSize"></param>
-        /// <param name="OutBuffer"></param>
-        /// <param name="nOutBufferSize"></param>
-        /// <param name="pBytesReturned"></param>
-        /// <param name="lpOverlapped"></param>
-        /// <returns></returns>
-        [DllImport("Kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool DeviceIoControl(
-                IntPtr hDevice,
-                uint dwIoControlCode,
-                ref long InBuffer,
-                int nInBufferSize,
-                ref long OutBuffer,
-                int nOutBufferSize,
-                ref int pBytesReturned,
-                [In] ref NativeOverlapped lpOverlapped);
-
     }
 }
-
