@@ -87,6 +87,28 @@ namespace WinLibTests
             Parameters.Add("ServiceName", "ProcessHacker");
             CommandOutput results = driverCommand.Execute(Parameters);
             Console.WriteLine(results.Message);
+
+            // Clean up
+            System.Diagnostics.Process createService = new System.Diagnostics.Process();
+            System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
+            startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+            startInfo.FileName = "cmd.exe";
+            startInfo.Arguments = "/C sc stop ProcessHacker";
+            createService.StartInfo = startInfo;
+            createService.Start();
+            createService.WaitForExit(2000);
+            createService.Close();
+
+            System.Diagnostics.Process startService = new System.Diagnostics.Process();
+            System.Diagnostics.ProcessStartInfo startServiceProcessInfo = new System.Diagnostics.ProcessStartInfo();
+            startServiceProcessInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+            startServiceProcessInfo.FileName = "cmd.exe";
+            startServiceProcessInfo.Arguments = "/C sc delete ProcessHacker";
+            startService.StartInfo = startServiceProcessInfo;
+            startService.Start();
+            startService.WaitForExit(2000);
+            startService.Close();
+
             File.Delete(tempPath);
             Assert.AreEqual("driver", driverCommand.Name);
             Assert.IsTrue(results.Complete);

@@ -425,12 +425,6 @@ namespace Faction.Modules.Dotnet.Commands
 
         public override CommandOutput Execute(Dictionary<string, string> Parameters = null)
         {
-            // Reference information:
-            // https://docs.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-enumdevicedrivers
-            // https://docs.microsoft.com/en-us/windows/win32/psapi/device-driver-information
-            // https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea?redirectedfrom=MSDN
-            // https://docs.microsoft.com/en-us/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol?redirectedfrom=MSDN
-
             CommandOutput output = new CommandOutput();
             bool isElevated;
             List<string> deviceDrivers = new List<string>();
