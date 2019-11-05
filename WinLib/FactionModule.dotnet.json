@@ -121,11 +121,16 @@
 					"Position": 1,
 					"Help": "The Path for the key you're working with. Must begin with either HKLM or HKCU"
 				},
-				{
-					"Name": "Value",
-					"Required": "False",
-					"Help": "The value to write. This parameter is required if you're using write."
-				}
+        {
+          "Name": "Value",
+          "Required": "False",
+          "Help": "The value to write. This parameter is required if you're using write."
+        },
+        {
+          "Name": "Type",
+          "Required": "False",
+          "Help": "type of key to delete (Value or SubKey).  This parameter is required if you're using delete."
+        }
 			]
 		},
 		{
@@ -142,30 +147,65 @@
 				}
 			]
 		},
-		{
-			"Name": "wmi",
-			"Description": "Execute a WMI query",
-			"Help": "This command executes the given WMI query against the specified computer",
-			"OpsecSafe": "False",
-			"Parameters": [
-				{
-					"Name": "Query",
-					"Required": "True",
-					"Position": 0,
-					"Help": "WMI query to execute"
-				},
-				{
-					"Name": "Namespace",
-					"Required": "False",
-					"Help": "The namespace to execute the WMI query in. Default is 'root\\cimv2'"
-				},
-				{
-					"Name": "ComputerName",
-					"Required": "False",
-					"Help": "Computer to run the WMI query against. Default is localhost."
-				}
-			]
-		}
+    {
+      "Name": "wmi",
+      "Description": "Execute a WMI query",
+      "Help": "This command executes the given WMI query against the specified computer",
+      "OpsecSafe": "False",
+      "Parameters": [
+        {
+          "Name": "Query",
+          "Required": "True",
+          "Position": 0,
+          "Help": "WMI query to execute"
+        },
+        {
+          "Name": "Namespace",
+          "Required": "False",
+          "Help": "The namespace to execute the WMI query in. Default is 'root\\cimv2'"
+        },
+        {
+          "Name": "ComputerName",
+          "Required": "False",
+          "Help": "Computer to run the WMI query against. Default is localhost."
+        }
+      ]
+    },
+    {
+      "Name": "driver",
+      "Description": "Work with Kernel Drivers",
+      "Help": "This command will enumerate, install, call, or remove a kernel driver",
+      "OpsecSafe": "False",
+      "Parameters": [
+        {
+          "Name": "Operation",
+          "Required": "True",
+          "Position": 0,
+          "Help": "Enumerate, Install, Call, or Unload."
+        },
+        {
+          "Name": "DriverPath",
+          "Required": "False",
+          "Help": "Physical path of driver on disk: example: C:\\test\\driver.sys."
+        },
+        {
+          "Name": "ServiceName",
+          "Required": "False",
+          "Help": "If installing a driver, ServiceName to install it under."
+        },
+        {
+          "Name": "ControlCode",
+          "Required": "False",
+          "Help": "IO Control Code to call if calling a driver."
+        },
+        {
+          "Name": "Buffer",
+          "Required": "False",
+          "Help": "Buffer to send to driver (if calling)."
+        }
+      ]
+    }
+
 	],
 	"BuildLocation": "./Builds/Debug/winlib.dll"
 }
