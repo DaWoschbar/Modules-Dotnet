@@ -1,3 +1,6 @@
 [submodule "WinLib/SharpSploit"]
 	path = WinLib/SharpSploit
 	url = git@github.com:cobbr/SharpSploit.git
+[submodule ".\\WinLib\\SharpSploit"]
+	path = .\\WinLib\\SharpSploit
+	url = https://github.com/FactionC2/SharpSploit.git
